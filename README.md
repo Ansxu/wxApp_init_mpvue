@@ -29,7 +29,7 @@ npm build:wx
 npm build:swan
 npm build:tt
 npm build:my
-
+```
 # 依赖
 "mpvue": "^2.0.0",
 "node-sass": "^4.13.0",
