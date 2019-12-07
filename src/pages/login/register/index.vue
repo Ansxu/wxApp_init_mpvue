@@ -4,10 +4,8 @@
       <div class="regLoginBox">
         <div class="logo">
           <div class="img">
-            <!-- <img src="http://jrwd.wtvxin.com/upload/images/logo0.png"> -->
-            <img src="http://hxjp.wtvxin.com/static/logo.png" />
+            <img src="/static/images/user.png" />
           </div>
-          <!-- <p class="mt2 font30 ca">海选鲸品</p> -->
         </div>
         <div class="from pd10">
           <div class="from-line">
@@ -83,7 +81,6 @@ export default {
     };
   },
   onLoad(params) {
-    console.log(wx.getStorageSync("userInfo"));
     this.btnText = "获取验证码";
     this.phoneNumber = "";
     this.verifyCode = "";
@@ -95,14 +92,10 @@ export default {
     this.shareId = params.shareId || "";
   },
   onShow() {
-    // console.log(wx.getStorageSync('scene'),"//////////////")
     if(wx.getStorageSync('theyCode') !='undefined'){
       this.inviteCode = wx.getStorageSync('theyCode')
     }else{
-      console.log("rrrrrrrrrrr")
     }
-    
-    console.log(this.inviteCode,"//////////邀请码")
   },
   methods: {
     setBarTitle() {
@@ -120,7 +113,6 @@ export default {
     },
     //注册账号
     async Register() {
-      console.log("确认注册");
       if (!this.registerCheck()) return;
       const userInfo = wx.getStorageSync("userInfo");
       const openId = wx.getStorageSync("openId");
@@ -184,8 +176,6 @@ export default {
         });
         return false;
       } else {
-        //发送绑定手机验证码：http://scapi.wtvxin.com/api/services/app/Account/SendBindingSecurityCode
-
         // 验证码类型 会员注册0,会员登录1,会员找回密码2,会员找回支付密码3,会员修改手机号4,
         // 会员重新绑定手机号5,会员微信绑定手机号6, 师傅登录7,师傅注册8,师傅绑定银行卡9,
         // 师傅微信绑定手机号10,师傅修改手机号11,师傅重新绑定手机号12,师傅找回密码13,

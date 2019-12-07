@@ -3,20 +3,26 @@ import logins from './login'
 
 //API接口地址
 // 线上
-// const host = 'https://api.gllgyz.com/api/';
+// const host = 'https://api.gllyz.com/api/';
 // 线上后台地址
 // const filePath = 'http://xcx.gllgyz.com';
-// 测试
-const host = 'http://hxapia.wtvxin.com/api/';
-// wss地址
-const wssPath = 'wss://hxapia.wtvxin.com/WebSocketServer.ashx'
-// 测试后台地址
-const filePath = 'http://www.benniaoshuzi.com';
+const host = 'http://hxapia.com/api/';// 测试
+const wssPath = 'wss://hxapia.com/WebSocketServer.ashx';// wss地址
+const filePath = 'http://www.hxapia.com';// 测试后台地址
+const LoginPath = "/pages/login/main";//登录路径
+const RegisterPath = "/pages/login/register/main";//注册路径
 
 
 //请求封装 //loginFn:重新登录后执行的函数
 let status = false;
-function request(url, data, loginFn, method) {
+// 统一请求返回code
+const code={
+  success:0,//成功
+  fail:1,//失败
+  notRegister:2,//未注册
+  resCode1:200,//成功特别方式
+}
+function request(url, data,method, loginFn) {
   wx.showLoading({
     title: '加载中' //数据请求前loading
   })
@@ -28,32 +34,20 @@ function request(url, data, loginFn, method) {
       header: {
         'content-type': 'application/json'
       },
-      // header:{'Content-Type': 'application/x-www-form-urlencoded'},
       success: function (res) {
         wx.hideLoading();
         switch (res.data.code) {
-          case 0:
+          case code.success:
             resolve(res.data);
             break;
-          case 1:
+          case code.resCode1:
             resolve(res.data);
             break;
-          case 200:
-            resolve(res.data);
-            break;
-          case 2:
+          case code.notRegister:
             wx.showToast({
               title: '需要重新登录!',
               icon: 'none'
             })
-            // 设置需要重新登录执行的函数
-            // getApp()--微信全局对象
-            if (loginFn) {
-              // 创建全局对象userInfoReadyCallback为匿名函数，执行需要重新登录函数
-              getApp().userInfoReadyCallback = () => {
-                loginFn()
-              }
-            }
             // 没登录过跳转到登录页面
             if (!wx.getStorageSync("userId") || !wx.getStorageSync("token")) {
               if(!status){
@@ -63,7 +57,7 @@ function request(url, data, loginFn, method) {
                   success(res){
                     if(res.confirm){
                       wx.navigateTo({
-                        url: '/pages/login/main'
+                        url: LoginPath
                       })
                     }
                   },
@@ -73,6 +67,14 @@ function request(url, data, loginFn, method) {
                 })
               }
             } else {
+              // 设置需要重新登录执行的函数
+              // getApp()--微信全局对象
+              if (loginFn) {
+                // 创建全局对象userInfoReadyCallback为匿名函数，执行需要重新登录函数
+                getApp().userInfoReadyCallback = () => {
+                  loginFn()
+                }
+              }
               // 登录过期自动重新登录
               logins({
                 success() {
@@ -83,7 +85,7 @@ function request(url, data, loginFn, method) {
                   }
                 }
               }).then(() => {
-                resolve()
+                reject()
               });
             }
             break;
@@ -107,8 +109,31 @@ function request(url, data, loginFn, method) {
     })
   })
 }
-
-
+export function get(url, data,isLogin, loginFn) {
+  return request(url, data, 'GET', loginFn)
+}
+export function post(url, data,isLogin, loginFn) {
+  return request(url, data,'POST', loginFn)
+}
+//判断是否登录，未登录做弹窗跳转登录页面
+export function judgeLogin(){
+  if (!wx.getStorageSync("userId") || !wx.getStorageSync("token")) {
+      wx.showModal({
+        title:'是否跳转到登录页面？',
+        success(res){
+          if(res.confirm){
+            wx.navigateTo({
+              url: LoginPath
+            })
+          }
+        }
+      })
+      return false;
+  }else{
+    return true;
+  }
+}
+// 获取图片base64
 export function getbase64(urladdress) {
   wx.request({
     url: urladdress,
@@ -131,12 +156,6 @@ export function getbase64(urladdress) {
   //     }
   // });
 
-}
-export function get(url, data, loginFn) {
-  return request(url, data, loginFn, 'GET')
-}
-export function post(url, data, loginFn) {
-  return request(url, data, loginFn, 'POST')
 }
 
 
@@ -450,5 +469,7 @@ export {
   host,
   filePath,
   wssPath,
-  dateUtils
+  dateUtils,
+  LoginPath,
+  RegisterPath
 }
