@@ -30,7 +30,7 @@ npm build:swan
 npm build:tt
 npm build:my
 ```
-# 依赖
+## 依赖
 "mpvue": "^2.0.0",
 "node-sass": "^4.13.0",
 "sass-loader": "^6.0.7",
