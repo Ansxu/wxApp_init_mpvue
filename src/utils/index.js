@@ -158,13 +158,6 @@ export function getbase64(urladdress) {
 
 }
 
-
-//移除userInfo,Token
-// function removeLocalToken() {
-//   wx.removeStorageSync('userInfo');
-//   wx.removeStorageSync('token');
-// }
-
 export function trim(str) {
   return str.replace(/(^\s*)|(\s*$)/g, "");
 }
@@ -281,33 +274,6 @@ export function upFile(filePath) {
     })
   })
 }
-// 获取新消息红点
-export function getNewMsgDot() {
-  return new Promise((resolve, reject) => {
-    if (wx.getStorageSync("userId") && wx.getStorageSync("token")) {
-      post("Consult/NewMsgCount", {
-        UserId: wx.getStorageSync("userId"),
-        Token: wx.getStorageSync("token"),
-        UserType: 1
-      }).then(res => {
-        if (res.data > 0) {
-          let _res = res.data
-          _res > 99 ? _res = '99+' : _res = String(_res);
-          wx.setTabBarBadge({
-            index: 1,
-            text: _res
-          });
-          resolve();
-        } else {
-          wx.removeTabBarBadge({
-            index: 1
-          });
-          reject();
-        }
-      });
-    }
-  })
-}
 // 时间格式化工具
 function formatNumber(n) {
   const str = n.toString()
@@ -370,8 +336,8 @@ export function editTime(time, type = 'date') {
   return newTime;
 }
 
-// 更改头像展示，判断是否微信头像
-export function avatar(img) {
+// 更改图片展示，判断是否带链接图片
+export function autoImg(img) {
   if (img.indexOf('http') === -1) {
     return filePath + img
   }
