@@ -4,16 +4,16 @@
       <div class="regLoginBox">
         <div class="logo">
           <div class="img">
-            <img src="/static/images/user.png" />
+            <img src="/static/images/logo.png" />
           </div>
         </div>
         <div class="from pd10">
           <div class="from-line">
-            <span class="icon icon_phone"></span>
-            <input type="text" class="ipt" placeholder="请输入手机号码" v-model="phoneNumber" />
+            <img src="/static/images/phone.png" class="phone-icon" alt="" mode="widthFix">
+            <input type="text" class="ipt phone-input" placeholder="请输入手机号码" v-model="phoneNumber" />
           </div>
           <div class="from-line">
-            <span class="icon icon_code"></span>
+            <img src="/static/images/phoneCode.png" class="phoneCode-icon" alt="" mode="widthFix">
             <input type="text" class="ipt" placeholder="请输入验证码" v-model="verifyCode" />
             <!-- <div class="getcode" @click="getCode(this)">{{btnText}}</div> -->
             <button
@@ -118,17 +118,19 @@ export default {
       const openId = wx.getStorageSync("openId");
       const token = wx.getStorageSync("wxToken");
       const unionid = wx.getStorageSync("unionid");
-      const res = await post("Login/MemberBindOrRegister", {
-        Mobile: this.phoneNumber,
-        VerifyCode: this.verifyCode,
-        PassWord: this.password,
-        OkPassWord: this.password2,
-        Unionid: unionid, //微信统一unionid号
-        OpenId: openId,
-        LoginParameterType:0,
-        Token: token,
-        NickName: userInfo.nickName,
-        AvatarUrl: userInfo.avatarUrl,
+      const res = await post("Login/BindOrRegister", {
+        mobile: this.phoneNumber,
+        yzCode: this.verifyCode,
+        // PassWord: this.password,
+        // OkPassWord: this.password2,
+        unionid: unionid, //微信统一unionid号
+        openId: openId,
+        // LoginParameterType:0,
+        // Token: token,
+        userInfo:{
+            nickName: userInfo.nickName,
+            avatarUrl: userInfo.avatarUrl,
+        },
         // gender: userInfo.gender === 1 ? "男" : "女",
         // IdentityType: 1, //操作的身份值 1-客户 2-师傅
         InviteCode:this.inviteCode
@@ -180,7 +182,7 @@ export default {
         // 会员重新绑定手机号5,会员微信绑定手机号6, 师傅登录7,师傅注册8,师傅绑定银行卡9,
         // 师傅微信绑定手机号10,师傅修改手机号11,师傅重新绑定手机号12,师傅找回密码13,
         // 客服登录14,客服找回密码15,客服绑定账号16
-        const result = get("Login/GetWxBindTelCode", {
+        const result = get("Login/GetMiniAppBindTelCode", {
           mobile: this.phoneNumber,
         });
         wx.showToast({
