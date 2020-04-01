@@ -1,4 +1,3 @@
-import logins from './login'
 
 
 //API接口地址
@@ -11,109 +10,9 @@ const wssPath = 'wss://hxapia.com/WebSocketServer.ashx';// wss地址
 const filePath = 'http://www.hxapia.com';// 测试后台地址
 const LoginPath = "/pages/login/main";//登录路径
 const RegisterPath = "/pages/login/register/main";//注册路径
-
-
-//请求封装 //loginFn:重新登录后执行的函数
-let status = false;
-// 统一请求返回code
-const code={
-  success:0,//成功
-  fail:1,//失败
-  notRegister:2,//未注册
-  resCode1:200,//成功特别方式
-}
-function request(url, data,method, loginFn) {
-  wx.showLoading({
-    title: '加载中' //数据请求前loading
-  })
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: host + url, //仅为示例，并非真实的接口地址
-      method: method,
-      data: data,
-      header: {
-        'content-type': 'application/json'
-      },
-      success: function (res) {
-        wx.hideLoading();
-        switch (res.data.code) {
-          case code.success:
-            resolve(res.data);
-            break;
-          case code.resCode1:
-            resolve(res.data);
-            break;
-          case code.notRegister:
-            wx.showToast({
-              title: '需要重新登录!',
-              icon: 'none'
-            })
-            // 没登录过跳转到登录页面
-            if (!wx.getStorageSync("userId") || !wx.getStorageSync("token")) {
-              if(!status){
-                status = true;
-                wx.showModal({
-                  title:'是否跳转到登录页面？',
-                  success(res){
-                    if(res.confirm){
-                      wx.navigateTo({
-                        url: LoginPath
-                      })
-                    }
-                  },
-                  complete(){
-                    status = false;
-                  }
-                })
-              }
-            } else {
-              // 设置需要重新登录执行的函数
-              // getApp()--微信全局对象
-              if (loginFn) {
-                // 创建全局对象userInfoReadyCallback为匿名函数，执行需要重新登录函数
-                getApp().userInfoReadyCallback = () => {
-                  loginFn()
-                }
-              }
-              // 登录过期自动重新登录
-              logins({
-                success() {
-                  if (getApp().userInfoReadyCallback) {
-                    getApp().userInfoReadyCallback()
-                    // 执行完成清空匿名函数
-                    getApp().userInfoReadyCallback = null
-                  }
-                }
-              }).then(() => {
-                reject()
-              });
-            }
-            break;
-          default:
-            wx.showToast({
-              title: res.data.msg, //提示的内容,
-              icon: "none", //图标,
-              mask: false, //显示透明蒙层，防止触摸穿透,
-            });
-            reject(res.data)
-        }
-      },
-      fail: function (error) {
-        wx.hideLoading();
-        wx.showToast({
-          title: error || '请求失败' + '，请刷新页面重试!',
-          icon: "none"
-        })
-        reject(false)
-      }
-    })
-  })
-}
-export function get(url, data,isLogin, loginFn) {
-  return request(url, data, 'GET', loginFn)
-}
-export function post(url, data,isLogin, loginFn) {
-  return request(url, data,'POST', loginFn)
+import {get,post} from '@/utils/request.js';
+export {
+  host,filePath,wssPath,dateUtils,LoginPath,RegisterPath,get,post
 }
 //判断是否登录，未登录做弹窗跳转登录页面
 export function judgeLogin(){
@@ -133,31 +32,22 @@ export function judgeLogin(){
     return true;
   }
 }
-// 获取图片base64
-export function getbase64(urladdress) {
-  wx.request({
-    url: urladdress,
-    method: 'GET',
-    responseType: 'arraybuffer',
-    success: (result) => {
-      let base64 = wx.arrayBufferToBase64(result);
-      return base64;
-    },
-    fail: () => {},
-    complete: () => {}
-  });
-  //({
-  //     url:'https://www.dounine.com/hello.jpg',
-  //     method:'GET',
-  //     responseType: 'arraybuffer',
-  //     success:function(res){
-  //       let base64 = wx.arrayBufferToBase64(res);
-  //       $this.data.userImageBase64 = 'data:image/jpg;base64,' + base64;;
-  //     }
-  // });
-
+// navigateTo跳转，转参数
+export function navigate(path,params={}){
+  let p='';
+  const keyArr = Object.keys(params);
+  keyArr.length>0&&(p="?");
+  keyArr.map(item=>{
+    p+=`${item}=${params[item]}`;
+    // 不是最后一个值就+&
+    if(item!==keyArr[keyArr.length-1]){
+      p+='&';
+    }
+  })
+  wx.navigateTo({
+    url:`/pages/${path}${p}`
+  })
 }
-
 export function trim(str) {
   return str.replace(/(^\s*)|(\s*$)/g, "");
 }
@@ -184,7 +74,6 @@ export function valPhone(tel) {
   return true;
 }
 
-
 // 函数防抖
 let timeout = null
 export function debounce(fn, wait = 500) {
@@ -200,79 +89,6 @@ export function throtte(fn, wait = 500) {
   setTimeout(() => {
     throtteStatus = false;
   }, wait)
-}
-// 打开选取图片，获取图片临时路径
-export function getImgPath(num = 1, sourceType = ["album", "camera"], sizeType = ['original']) {
-  return new Promise((resolve, reject) => {
-    wx.chooseImage({
-      count: num, //最大图片数量=最大数量-临时路径的数量
-      sizeType, //图片尺寸 original--原图；compressed--压缩图
-      sourceType, //选择图片的位置 album--相册选择, 'camera--使用相机
-      success: res => {
-        resolve(res.tempFilePaths) //返回选择的图片临时地址数组，
-      },
-      fail(err) {
-        wx.showToast({
-          title: '图片选择失败，请重试！',
-          icon: 'none'
-        })
-        reject(err)
-      }
-    });
-  })
-}
-// 获取图片base64码
-export function getImgBase64(filePath) {
-  return new Promise((resolve, reject) => {
-    wx.getFileSystemManager().readFile({
-      filePath, //选择图片返回的相对路径
-      encoding: "base64", //编码格式
-      success(res) {
-        resolve("data:image/png;base64," + res.data.toString())
-      },
-      fail(err) {
-        wx.showToast({
-          title: '上传图片失败，请重试！',
-          icon: 'none'
-        })
-        reject(err)
-      }
-    });
-  })
-}
-// 上传base64图片
-export function upImgBase64(base64) {
-  return new Promise((resolve, reject) => {
-    post('Authentication/PhotoUpload', {
-      Base64Data: base64
-    }).then(res => {
-      resolve(res.data)
-    }).catch(err => {
-      reject(err)
-    })
-  })
-}
-// 上传文件
-export function upFile(filePath) {
-  return new Promise((resolve, reject) => {
-    wx.uploadFile({
-      url: host + 'Area/VoiceUpload',
-      filePath,
-      name: 'file',
-      success(res) {
-        console.log('文件上传', res)
-        resolve(res);
-      },
-      fail(err) {
-        console.log('文件上传失败', err)
-        wx.showToast({
-          title: '文件上传失败，请重试！',
-          icon: 'none'
-        })
-        reject(err)
-      }
-    })
-  })
 }
 // 时间格式化工具
 function formatNumber(n) {
@@ -294,7 +110,6 @@ export function formatTime(date) {
 
   return `${t1} ${t2}`
 }
-
 // 微信支付
 // param--支付参数（后台返回）；success--支付成功执行的方法
 export function wx_pay(param) {
@@ -321,7 +136,7 @@ export function wx_pay(param) {
 }
 
 // 更改时间格式
-// type:'date'--返回日期；'time'--返回日期+时间
+// type:'date'--返回日期；'time'--返回日期+时间; 's'--日期+时间+秒
 export function editTime(time, type = 'date') {
 
   let newTime = ''
@@ -332,7 +147,10 @@ export function editTime(time, type = 'date') {
   if (type === "date") {
     newTime = time.substr(0, time.lastIndexOf('T'))
   }
-  console.log(newTime, 'time')
+  if (type === "s") {
+    newTime = time.substr(0, time.lastIndexOf('.'))
+    newTime = newTime.replace('T', ' ')
+  }
   return newTime;
 }
 
@@ -343,11 +161,8 @@ export function autoImg(img) {
   }
   return img;
 }
-/**
- * JS获取距当前时间差
- * 
+/**JS获取距当前时间差
  * @param int time JS毫秒时间戳
- *
  */
 var dateUtils = {
 	UNITS: {
@@ -431,11 +246,3 @@ export function get_time_diff(time) {
 // module.exports = {
 //   dateUtils: dateUtils,
 // }
-export {
-  host,
-  filePath,
-  wssPath,
-  dateUtils,
-  LoginPath,
-  RegisterPath
-}
